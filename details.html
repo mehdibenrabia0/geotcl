@@ -16,7 +16,6 @@ header {
   align-items: center;
   border-bottom: 3px solid #3498db;
 }
-
 header h1 { font-size: 17px; font-weight: bold; letter-spacing: 0.03em; }
 
 .btn-retour {
@@ -27,7 +26,6 @@ header h1 { font-size: 17px; font-weight: bold; letter-spacing: 0.03em; }
   border-radius: 4px;
   cursor: pointer;
   font-size: 13px;
-  letter-spacing: 0.02em;
 }
 .btn-retour:hover { background: rgba(255,255,255,0.1); }
 
@@ -40,15 +38,32 @@ header h1 { font-size: 17px; font-weight: bold; letter-spacing: 0.03em; }
   overflow: hidden;
 }
 
-.card-header {
-  background: #2c3e50;
-  color: white;
-  padding: 18px 28px;
-}
+.card-header { background: #2c3e50; color: white; padding: 18px 28px; }
 .card-header h2 { font-size: 20px; font-weight: bold; }
 .card-header p  { font-size: 12px; opacity: 0.6; margin-top: 4px; letter-spacing: 0.04em; text-transform: uppercase; }
 
 .card-body { padding: 28px; }
+
+/* Image carte OpenStreetMap */
+.map-preview {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  display: block;
+  border-bottom: 1px solid #e0e6ed;
+  background: #f0f4f8;
+}
+
+.map-preview-label {
+  text-align: center;
+  font-size: 11px;
+  color: #7f8c8d;
+  padding: 5px;
+  background: #f7f9fb;
+  border-bottom: 1px solid #e0e6ed;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
 
 .detail-section {
   border: 1px solid #e0e6ed;
@@ -68,10 +83,7 @@ header h1 { font-size: 17px; font-weight: bold; letter-spacing: 0.03em; }
   text-transform: uppercase;
 }
 
-.detail-row {
-  display: flex;
-  border-bottom: 1px solid #f0f4f8;
-}
+.detail-row { display: flex; border-bottom: 1px solid #f0f4f8; }
 .detail-row:last-child { border-bottom: none; }
 
 .detail-label {
@@ -115,14 +127,6 @@ header h1 { font-size: 17px; font-weight: bold; letter-spacing: 0.03em; }
   border: 1px solid #aed6f1;
   letter-spacing: 0.08em;
   font-family: monospace;
-}
-
-.photo-etab {
-  width: 100%;
-  max-height: 200px;
-  object-fit: cover;
-  display: block;
-  border-bottom: 1px solid #e0e6ed;
 }
 
 .actions {
@@ -291,10 +295,6 @@ header h1 { font-size: 17px; font-weight: bold; letter-spacing: 0.03em; }
         <input type="text" id="edit-adresse" />
       </div>
       <div class="form-group">
-        <label>Photo URL</label>
-        <input type="text" id="edit-photo_url" />
-      </div>
-      <div class="form-group">
         <label>Statut TCL</label>
         <select id="edit-est_paye">
           <option value="false">Non paye</option>
@@ -355,9 +355,13 @@ async function load() {
 function afficher(data) {
   var html = "";
 
-  if (data.photo_url) {
-    html += '<img class="photo-etab" src="' + data.photo_url + '" alt="Photo" onerror="this.style.display=\'none\'">';
-  }
+  // Image OpenStreetMap automatique depuis lat/lng
+  var imgUrl = "https://staticmap.openstreetmap.de/staticmap.php?center="
+    + data.lat + "," + data.lng
+    + "&zoom=17&size=640x200&markers=" + data.lat + "," + data.lng + ",red";
+
+  html += '<img class="map-preview" src="' + imgUrl + '" alt="Localisation" onerror="this.style.display=\'none\'">';
+  html += '<div class="map-preview-label">Vue cartographique de l\'emplacement</div>';
 
   html +=
     '<div class="card-header">' +
@@ -366,7 +370,7 @@ function afficher(data) {
     '</div>' +
     '<div class="card-body">';
 
-  // Section : Informations generales (avec CIN)
+  // Section : Informations generales
   var cinAff = data.cin
     ? '<span class="badge-cin">' + data.cin + '</span>'
     : '—';
@@ -391,7 +395,7 @@ function afficher(data) {
   html +=
     '<div class="detail-section">' +
       '<div class="detail-section-title">Situation fiscale</div>' +
-      row("Statut TCL",       '<span class="badge ' + badgeClass + '">' + badgeText + '</span>') +
+      row("Statut TCL",        '<span class="badge ' + badgeClass + '">' + badgeText + '</span>') +
       row("Date d\'ouverture", dateAff) +
     '</div>';
 
@@ -428,7 +432,6 @@ function ouvrirModal() {
   document.getElementById("edit-proprietaire").value   = d.proprietaire   || "";
   document.getElementById("edit-activite").value       = d.activite       || "";
   document.getElementById("edit-adresse").value        = d.adresse        || "";
-  document.getElementById("edit-photo_url").value      = d.photo_url      || "";
   document.getElementById("edit-est_paye").value       = d.est_paye ? "true" : "false";
   document.getElementById("edit-date_ouverture").value = d.date_ouverture || "";
   document.getElementById("modalOverlay").classList.add("active");
@@ -456,25 +459,18 @@ async function sauvegarder() {
     proprietaire:   document.getElementById("edit-proprietaire").value.trim(),
     activite:       document.getElementById("edit-activite").value.trim(),
     adresse:        document.getElementById("edit-adresse").value.trim(),
-    photo_url:      document.getElementById("edit-photo_url").value.trim(),
     est_paye:       document.getElementById("edit-est_paye").value === "true",
     date_ouverture: document.getElementById("edit-date_ouverture").value || null
   };
 
-  if (!updates.nom) {
-    alert("Le nom est obligatoire.");
-    return;
-  }
+  if (!updates.nom) { alert("Le nom est obligatoire."); return; }
 
   const { error } = await db
     .from("etablissements")
     .update(updates)
     .eq("id", currentData.id);
 
-  if (error) {
-    alert("Erreur lors de la modification : " + error.message);
-    return;
-  }
+  if (error) { alert("Erreur lors de la modification : " + error.message); return; }
 
   currentData = Object.assign(currentData, updates);
   fermerModal();
@@ -496,10 +492,7 @@ async function supprimer() {
     .delete()
     .eq("id", currentData.id);
 
-  if (error) {
-    alert("Erreur lors de la suppression : " + error.message);
-    return;
-  }
+  if (error) { alert("Erreur lors de la suppression : " + error.message); return; }
 
   alert("L'etablissement a ete supprime avec succes.");
   window.location.href = "map.html";
