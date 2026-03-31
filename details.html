@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Détails — GeoTCL</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: Arial, sans-serif; background: #f0f4f8; min-height: 100vh; display: flex; flex-direction: column; }
@@ -10,301 +11,256 @@ body { font-family: Arial, sans-serif; background: #f0f4f8; min-height: 100vh; d
 header {
   background: #2c3e50;
   color: white;
-  padding: 14px 32px;
+  padding: 14px 24px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  border-bottom: 3px solid #3498db;
+  justify-content: space-between;
 }
-header h1 { font-size: 17px; font-weight: bold; letter-spacing: 0.03em; }
-
+header h1 { font-size: 18px; font-weight: 600; }
 .btn-retour {
   background: transparent;
+  border: 1px solid rgba(255,255,255,0.5);
   color: white;
-  border: 1px solid rgba(255,255,255,0.4);
-  padding: 7px 18px;
+  padding: 7px 16px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 14px;
 }
 .btn-retour:hover { background: rgba(255,255,255,0.1); }
 
-.container { max-width: 680px; margin: 40px auto; width: 90%; }
+.container {
+  max-width: 860px;
+  margin: 30px auto;
+  padding: 0 20px;
+  width: 100%;
+}
 
 .card {
   background: white;
-  border-radius: 4px;
+  border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  overflow: hidden;
-}
-
-.card-header { background: #2c3e50; color: white; padding: 18px 28px; }
-.card-header h2 { font-size: 20px; font-weight: bold; }
-.card-header p  { font-size: 12px; opacity: 0.6; margin-top: 4px; letter-spacing: 0.04em; text-transform: uppercase; }
-
-.card-body { padding: 28px; }
-
-/* Image carte OpenStreetMap */
-.map-preview {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-  display: block;
-  border-bottom: 1px solid #e0e6ed;
-  background: #f0f4f8;
-}
-
-.map-preview-label {
-  text-align: center;
-  font-size: 11px;
-  color: #7f8c8d;
-  padding: 5px;
-  background: #f7f9fb;
-  border-bottom: 1px solid #e0e6ed;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.detail-section {
-  border: 1px solid #e0e6ed;
-  border-radius: 4px;
-  overflow: hidden;
   margin-bottom: 20px;
+  overflow: hidden;
 }
-
-.detail-section-title {
-  background: #f7f9fb;
-  border-bottom: 1px solid #e0e6ed;
-  padding: 9px 16px;
-  font-size: 11px;
-  font-weight: bold;
-  color: #7f8c8d;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.detail-row { display: flex; border-bottom: 1px solid #f0f4f8; }
-.detail-row:last-child { border-bottom: none; }
-
-.detail-label {
-  width: 180px;
-  flex-shrink: 0;
-  padding: 12px 16px;
-  font-size: 13px;
-  color: #7f8c8d;
-  background: #fafbfc;
-  border-right: 1px solid #f0f4f8;
-}
-
-.detail-value {
-  padding: 12px 16px;
+.card-header {
+  background: #34495e;
+  color: white;
+  padding: 12px 20px;
   font-size: 14px;
-  color: #2c3e50;
-  font-weight: 500;
-  flex: 1;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
+.card-body { padding: 20px; }
+
+/* Carte Leaflet intégrée */
+#mini-map {
+  width: 100%;
+  height: 260px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+table { width: 100%; border-collapse: collapse; }
+tr { border-bottom: 1px solid #f0f0f0; }
+tr:last-child { border-bottom: none; }
+td { padding: 10px 12px; font-size: 14px; }
+td:first-child { color: #7f8c8d; width: 40%; font-weight: 500; }
+td:last-child { color: #2c3e50; }
 
 .badge {
   display: inline-block;
   padding: 3px 12px;
-  border-radius: 3px;
-  font-size: 12px;
-  font-weight: bold;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-.badge-paye    { background: #eafaf1; color: #1e8449; border: 1px solid #a9dfbf; }
-.badge-nonpaye { background: #fdf2f2; color: #c0392b; border: 1px solid #f5c6cb; }
-
-.badge-cin {
-  display: inline-block;
-  padding: 3px 12px;
-  border-radius: 3px;
+  border-radius: 12px;
   font-size: 13px;
-  font-weight: bold;
-  background: #eaf4fb;
-  color: #2471a3;
-  border: 1px solid #aed6f1;
-  letter-spacing: 0.08em;
-  font-family: monospace;
+  font-weight: 600;
 }
+.badge-paye    { background: #d4edda; color: #155724; }
+.badge-nonpaye { background: #f8d7da; color: #721c24; }
+.badge-cin     { background: #d0e8ff; color: #1a5276; font-family: monospace; font-size: 14px; }
 
 .actions {
   display: flex;
   gap: 12px;
-  padding: 20px 28px;
-  background: #f7f9fb;
-  border-top: 1px solid #e0e6ed;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
-
 .btn-modifier {
-  padding: 10px 24px;
+  flex: 1;
+  padding: 11px;
   background: #2980b9;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 5px;
   cursor: pointer;
   font-size: 14px;
-  font-weight: bold;
 }
 .btn-modifier:hover { background: #2471a3; }
-
 .btn-supprimer {
-  padding: 10px 24px;
+  flex: 1;
+  padding: 11px;
   background: white;
   color: #c0392b;
   border: 1px solid #c0392b;
-  border-radius: 4px;
+  border-radius: 5px;
   cursor: pointer;
   font-size: 14px;
-  font-weight: bold;
 }
-.btn-supprimer:hover { background: #fdf2f2; }
+.btn-supprimer:hover { background: #fdf0ef; }
 
 /* MODAL */
 .modal-overlay {
   display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.45);
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
   z-index: 1000;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
 }
 .modal-overlay.active { display: flex; }
-
 .modal {
   background: white;
-  border-radius: 4px;
+  border-radius: 8px;
   width: 90%;
-  max-width: 520px;
+  max-width: 500px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
 }
-
 .modal-header {
   background: #2c3e50;
   color: white;
-  padding: 16px 24px;
-  font-size: 16px;
-  font-weight: bold;
-  border-bottom: 3px solid #3498db;
+  padding: 14px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 8px 8px 0 0;
 }
-
-.modal-body { padding: 24px; }
-
-.form-group { margin-bottom: 16px; }
-
-.form-group label {
-  display: block;
-  font-size: 12px;
-  font-weight: bold;
-  color: #7f8c8d;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 6px;
-}
-
-.form-group input,
-.form-group select {
+.modal-body { padding: 20px; }
+.modal-body label { display: block; font-size: 13px; color: #555; margin-bottom: 4px; margin-top: 12px; }
+.modal-body input,
+.modal-body select {
   width: 100%;
-  padding: 10px 12px;
+  padding: 9px 11px;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 5px;
   font-size: 14px;
-  color: #2c3e50;
-  font-family: Arial, sans-serif;
 }
-
-.form-group input:focus,
-.form-group select:focus { border-color: #3498db; outline: none; }
-
 .modal-footer {
+  padding: 14px 20px;
   display: flex;
-  justify-content: flex-end;
   gap: 10px;
-  padding: 16px 24px;
-  background: #f7f9fb;
-  border-top: 1px solid #e0e6ed;
+  border-top: 1px solid #eee;
 }
-
 .btn-annuler {
-  padding: 9px 22px;
-  background: white;
-  color: #555;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
+  flex: 1; padding: 9px;
+  background: white; color: #555;
+  border: 1px solid #ccc; border-radius: 5px; cursor: pointer;
 }
-.btn-annuler:hover { background: #f0f4f8; }
-
 .btn-sauvegarder {
-  padding: 9px 22px;
-  background: #27ae60;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: bold;
+  flex: 1; padding: 9px;
+  background: #2980b9; color: white;
+  border: none; border-radius: 5px; cursor: pointer;
 }
-.btn-sauvegarder:hover { background: #219150; }
 
-.loading { text-align: center; color: #7f8c8d; padding: 60px 0; font-size: 15px; }
-.error   { text-align: center; color: #c0392b;  padding: 60px 0; font-size: 15px; }
+#loading { text-align: center; padding: 60px; color: #888; font-size: 15px; }
+#erreur  { text-align: center; padding: 40px; color: #c0392b; }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>Fiche Etablissement — GeoTCL</h1>
-  <button class="btn-retour" onclick="window.location.href='map.html'">Retour a la carte</button>
+  <button class="btn-retour" onclick="window.location.href='map.html'">&#8592; Retour à la carte</button>
+  <h1>Fiche établissement</h1>
+  <span id="ref-id" style="font-size:13px; opacity:0.7;"></span>
 </header>
 
 <div class="container">
-  <div class="card" id="card">
-    <div class="loading">Chargement en cours...</div>
-  </div>
+  <div id="loading">Chargement des données...</div>
+  <div id="erreur"  style="display:none;"></div>
+  <div id="contenu" style="display:none;">
+
+    <!-- Carte Leaflet -->
+    <div class="card">
+      <div class="card-header">Localisation</div>
+      <div class="card-body" style="padding:12px;">
+        <div id="mini-map"></div>
+      </div>
+    </div>
+
+    <!-- Informations générales -->
+    <div class="card">
+      <div class="card-header">Informations générales</div>
+      <div class="card-body" style="padding:0;">
+        <table>
+          <tr><td>CIN du propriétaire</td><td id="d-cin">—</td></tr>
+          <tr><td>Nom de l'établissement</td><td id="d-nom">—</td></tr>
+          <tr><td>Propriétaire</td><td id="d-proprietaire">—</td></tr>
+          <tr><td>Activité</td><td id="d-activite">—</td></tr>
+          <tr><td>Adresse</td><td id="d-adresse">—</td></tr>
+          <tr><td>Date d'ouverture</td><td id="d-date">—</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- Situation fiscale -->
+    <div class="card">
+      <div class="card-header">Situation fiscale</div>
+      <div class="card-body" style="padding:0;">
+        <table>
+          <tr><td>Statut paiement TCL</td><td id="d-paye">—</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- Coordonnées GPS -->
+    <div class="card">
+      <div class="card-header">Coordonnées GPS</div>
+      <div class="card-body" style="padding:0;">
+        <table>
+          <tr><td>Latitude</td><td id="d-lat">—</td></tr>
+          <tr><td>Longitude</td><td id="d-lng">—</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions">
+      <button class="btn-modifier"   onclick="ouvrirModal()">Modifier</button>
+      <button class="btn-supprimer"  onclick="supprimer()">Supprimer</button>
+    </div>
+
+  </div><!-- fin #contenu -->
 </div>
 
 <!-- MODAL MODIFICATION -->
-<div class="modal-overlay" id="modalOverlay">
+<div class="modal-overlay" id="modal">
   <div class="modal">
-    <div class="modal-header">Modifier l'etablissement</div>
+    <div class="modal-header">Modifier l'établissement</div>
     <div class="modal-body">
-      <div class="form-group">
-        <label>CIN du proprietaire (8 chiffres)</label>
-        <input type="text" id="edit-cin" maxlength="8" placeholder="Ex: 12345678" />
-      </div>
-      <div class="form-group">
-        <label>Nom</label>
-        <input type="text" id="edit-nom" />
-      </div>
-      <div class="form-group">
-        <label>Proprietaire</label>
-        <input type="text" id="edit-proprietaire" />
-      </div>
-      <div class="form-group">
-        <label>Activite</label>
-        <input type="text" id="edit-activite" />
-      </div>
-      <div class="form-group">
-        <label>Adresse</label>
-        <input type="text" id="edit-adresse" />
-      </div>
-      <div class="form-group">
-        <label>Statut TCL</label>
-        <select id="edit-est_paye">
-          <option value="false">Non paye</option>
-          <option value="true">Paye</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Date d'ouverture</label>
-        <input type="date" id="edit-date_ouverture" />
-      </div>
+      <label>CIN du propriétaire</label>
+      <input id="m-cin" maxlength="8" placeholder="8 chiffres">
+
+      <label>Nom de l'établissement *</label>
+      <input id="m-nom" placeholder="Nom">
+
+      <label>Propriétaire</label>
+      <input id="m-proprietaire" placeholder="Propriétaire">
+
+      <label>Activité</label>
+      <input id="m-activite" placeholder="Activité">
+
+      <label>Adresse</label>
+      <input id="m-adresse" placeholder="Adresse">
+
+      <label>Date d'ouverture</label>
+      <input type="date" id="m-date">
+
+      <label>Statut paiement</label>
+      <select id="m-paye">
+        <option value="false">Non payé</option>
+        <option value="true">Payé</option>
+      </select>
     </div>
     <div class="modal-footer">
       <button class="btn-annuler"     onclick="fermerModal()">Annuler</button>
@@ -313,193 +269,130 @@ header h1 { font-size: 17px; font-weight: bold; letter-spacing: 0.03em; }
   </div>
 </div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-
-if (!sessionStorage.getItem("tcl_user")) {
-  window.location.href = "login.html";
-}
-
 const SUPABASE_URL = "https://jcfpfsmiqcdeeabwtwrw.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpjZnBmc21pcWNkZWVhYnd0d3J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1OTQxMjksImV4cCI6MjA5MDE3MDEyOX0.QR3BQ3h7L93Kle_ziPOOHyVe2DF1nsu42xxvdf2n-tg";
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-var currentData = null;
+var etabId   = sessionStorage.getItem("selected_id");
+var etabData = null;
+var miniMap  = null;
 
-async function load() {
-  var id = sessionStorage.getItem("selected_id");
-  if (!id) {
-    document.getElementById("card").innerHTML =
-      '<div class="error">Aucun etablissement selectionne.<br><br>' +
-      '<button class="btn-retour" onclick="window.location.href=\'map.html\'">Retour a la carte</button></div>';
+async function charger() {
+  if (!etabId) {
+    document.getElementById("loading").style.display = "none";
+    document.getElementById("erreur").style.display  = "block";
+    document.getElementById("erreur").textContent    = "Aucun établissement sélectionné.";
     return;
   }
 
   const { data, error } = await db
     .from("etablissements")
     .select("*")
-    .eq("id", id)
+    .eq("id", etabId)
     .single();
 
+  document.getElementById("loading").style.display = "none";
+
   if (error || !data) {
-    document.getElementById("card").innerHTML =
-      '<div class="error">Impossible de charger les donnees.<br><br>' +
-      '<button class="btn-retour" onclick="window.location.href=\'map.html\'">Retour a la carte</button></div>';
+    document.getElementById("erreur").style.display  = "block";
+    document.getElementById("erreur").textContent    = "Établissement introuvable.";
     return;
   }
 
-  currentData = data;
+  etabData = data;
   afficher(data);
 }
 
-function afficher(data) {
-  var html = "";
+function afficher(d) {
+  document.getElementById("contenu").style.display = "block";
+  document.getElementById("ref-id").textContent    = "Réf. #" + d.id;
 
-  // Image OpenStreetMap automatique depuis lat/lng
-  var imgUrl = "https://staticmap.openstreetmap.de/staticmap.php?center="
-    + data.lat + "," + data.lng
-    + "&zoom=17&size=640x200&markers=" + data.lat + "," + data.lng + ",red";
+  document.getElementById("d-cin").innerHTML        = d.cin ? '<span class="badge badge-cin">' + d.cin + '</span>' : '—';
+  document.getElementById("d-nom").textContent        = d.nom        || "—";
+  document.getElementById("d-proprietaire").textContent = d.proprietaire || "—";
+  document.getElementById("d-activite").textContent   = d.activite    || "—";
+  document.getElementById("d-adresse").textContent    = d.adresse     || "—";
+  document.getElementById("d-date").textContent       = d.date_ouverture ? new Date(d.date_ouverture).toLocaleDateString("fr-FR") : "—";
+  document.getElementById("d-lat").textContent        = d.lat;
+  document.getElementById("d-lng").textContent        = d.lng;
 
-  html += '<img class="map-preview" src="' + imgUrl + '" alt="Localisation" onerror="this.style.display=\'none\'">';
-  html += '<div class="map-preview-label">Vue cartographique de l\'emplacement</div>';
+  document.getElementById("d-paye").innerHTML = d.est_paye
+    ? '<span class="badge badge-paye">Payé</span>'
+    : '<span class="badge badge-nonpaye">Non payé</span>';
 
-  html +=
-    '<div class="card-header">' +
-      '<h2>' + data.nom + '</h2>' +
-      '<p>Fiche etablissement — Ref. #' + data.id + '</p>' +
-    '</div>' +
-    '<div class="card-body">';
-
-  // Section : Informations generales
-  var cinAff = data.cin
-    ? '<span class="badge-cin">' + data.cin + '</span>'
-    : '—';
-
-  html +=
-    '<div class="detail-section">' +
-      '<div class="detail-section-title">Informations generales</div>' +
-      row("CIN Proprietaire", cinAff) +
-      row("Nom",              data.nom          || "—") +
-      row("Proprietaire",     data.proprietaire || "—") +
-      row("Activite",         data.activite     || "—") +
-      row("Adresse",          data.adresse      || "—") +
-    '</div>';
-
-  // Section : Situation fiscale
-  var badgeClass = data.est_paye ? "badge-paye"   : "badge-nonpaye";
-  var badgeText  = data.est_paye ? "Paye"         : "Non paye";
-  var dateAff    = data.date_ouverture
-    ? new Date(data.date_ouverture).toLocaleDateString("fr-FR")
-    : "—";
-
-  html +=
-    '<div class="detail-section">' +
-      '<div class="detail-section-title">Situation fiscale</div>' +
-      row("Statut TCL",        '<span class="badge ' + badgeClass + '">' + badgeText + '</span>') +
-      row("Date d\'ouverture", dateAff) +
-    '</div>';
-
-  // Section : Localisation
-  html +=
-    '<div class="detail-section">' +
-      '<div class="detail-section-title">Localisation</div>' +
-      row("Latitude",  data.lat) +
-      row("Longitude", data.lng) +
-    '</div>';
-
-  html += '</div>';
-
-  html +=
-    '<div class="actions">' +
-      '<button class="btn-modifier"  onclick="ouvrirModal()">Modifier</button>' +
-      '<button class="btn-supprimer" onclick="supprimer()">Supprimer</button>' +
-    '</div>';
-
-  document.getElementById("card").innerHTML = html;
-}
-
-function row(label, value) {
-  return '<div class="detail-row">' +
-    '<div class="detail-label">' + label + '</div>' +
-    '<div class="detail-value">'  + value + '</div>' +
-  '</div>';
+  // Mini carte Leaflet
+  if (!miniMap) {
+    miniMap = L.map("mini-map", { zoomControl: true, scrollWheelZoom: false })
+               .setView([d.lat, d.lng], 16);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap"
+    }).addTo(miniMap);
+  } else {
+    miniMap.setView([d.lat, d.lng], 16);
+    miniMap.eachLayer(function(l){ if (l instanceof L.Marker) miniMap.removeLayer(l); });
+  }
+  L.marker([d.lat, d.lng]).addTo(miniMap).bindPopup(d.nom).openPopup();
 }
 
 function ouvrirModal() {
-  var d = currentData;
-  document.getElementById("edit-cin").value            = d.cin            || "";
-  document.getElementById("edit-nom").value            = d.nom            || "";
-  document.getElementById("edit-proprietaire").value   = d.proprietaire   || "";
-  document.getElementById("edit-activite").value       = d.activite       || "";
-  document.getElementById("edit-adresse").value        = d.adresse        || "";
-  document.getElementById("edit-est_paye").value       = d.est_paye ? "true" : "false";
-  document.getElementById("edit-date_ouverture").value = d.date_ouverture || "";
-  document.getElementById("modalOverlay").classList.add("active");
+  var d = etabData;
+  document.getElementById("m-cin").value         = d.cin            || "";
+  document.getElementById("m-nom").value         = d.nom            || "";
+  document.getElementById("m-proprietaire").value = d.proprietaire  || "";
+  document.getElementById("m-activite").value    = d.activite       || "";
+  document.getElementById("m-adresse").value     = d.adresse        || "";
+  document.getElementById("m-date").value        = d.date_ouverture || "";
+  document.getElementById("m-paye").value        = d.est_paye ? "true" : "false";
+  document.getElementById("modal").classList.add("active");
 }
-
 function fermerModal() {
-  document.getElementById("modalOverlay").classList.remove("active");
+  document.getElementById("modal").classList.remove("active");
 }
-
-document.getElementById("modalOverlay").addEventListener("click", function(e) {
-  if (e.target === this) fermerModal();
-});
 
 async function sauvegarder() {
-  var cin = document.getElementById("edit-cin").value.trim();
-
-  if (cin && !/^\d{8}$/.test(cin)) {
+  var cin = document.getElementById("m-cin").value.trim();
+  if (cin && (cin.length !== 8 || isNaN(cin))) {
     alert("Le CIN doit contenir exactement 8 chiffres.");
     return;
   }
 
-  var updates = {
+  var maj = {
     cin:            cin || null,
-    nom:            document.getElementById("edit-nom").value.trim(),
-    proprietaire:   document.getElementById("edit-proprietaire").value.trim(),
-    activite:       document.getElementById("edit-activite").value.trim(),
-    adresse:        document.getElementById("edit-adresse").value.trim(),
-    est_paye:       document.getElementById("edit-est_paye").value === "true",
-    date_ouverture: document.getElementById("edit-date_ouverture").value || null
+    nom:            document.getElementById("m-nom").value.trim(),
+    proprietaire:   document.getElementById("m-proprietaire").value.trim(),
+    activite:       document.getElementById("m-activite").value.trim(),
+    adresse:        document.getElementById("m-adresse").value.trim(),
+    date_ouverture: document.getElementById("m-date").value || null,
+    est_paye:       document.getElementById("m-paye").value === "true"
   };
 
-  if (!updates.nom) { alert("Le nom est obligatoire."); return; }
+  if (!maj.nom) { alert("Le nom est obligatoire."); return; }
 
-  const { error } = await db
-    .from("etablissements")
-    .update(updates)
-    .eq("id", currentData.id);
+  const { error } = await db.from("etablissements").update(maj).eq("id", etabId);
 
   if (error) { alert("Erreur lors de la modification : " + error.message); return; }
 
-  currentData = Object.assign(currentData, updates);
+  Object.assign(etabData, maj);
   fermerModal();
-  afficher(currentData);
+  afficher(etabData);
 }
 
 async function supprimer() {
-  var ok = confirm(
-    "Confirmation de suppression\n\n" +
-    "Vous etes sur le point de supprimer l'etablissement :\n" +
-    "« " + currentData.nom + " »\n\n" +
-    "Cette action est irreversible. Confirmer ?"
-  );
-
+  var nom = etabData ? etabData.nom : "cet établissement";
+  var ok  = confirm("Vous êtes sur le point de supprimer « " + nom + " ».\nCette action est irréversible.\n\nConfirmer la suppression ?");
   if (!ok) return;
 
-  const { error } = await db
-    .from("etablissements")
-    .delete()
-    .eq("id", currentData.id);
-
+  const { error } = await db.from("etablissements").delete().eq("id", etabId);
   if (error) { alert("Erreur lors de la suppression : " + error.message); return; }
 
-  alert("L'etablissement a ete supprime avec succes.");
+  sessionStorage.removeItem("selected_id");
   window.location.href = "map.html";
 }
 
-load();
+charger();
 </script>
-
 </body>
 </html>
