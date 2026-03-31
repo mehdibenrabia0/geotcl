@@ -90,7 +90,7 @@ header {
 .header-right {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -104,6 +104,18 @@ header {
   padding: 5px 12px;
   letter-spacing: 0.02em;
 }
+
+.btn-dashboard {
+  background: #27ae60;
+  color: white;
+  border: none;
+  padding: 7px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: bold;
+}
+.btn-dashboard:hover { background: #219150; }
 
 .btn-logout {
   background: #e74c3c;
@@ -216,6 +228,7 @@ header {
   </div>
   <div class="header-right">
     <div class="user-info" id="welcome"></div>
+    <button class="btn-dashboard" onclick="window.location.href='dashbord.html'">Dashboard</button>
     <button class="btn-logout" onclick="logout()">Deconnexion</button>
   </div>
 </header>
