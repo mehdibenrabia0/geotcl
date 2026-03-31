@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Tableau de bord — GeoTCL</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Arial, sans-serif; background: #f0f4f8; min-height: 100vh; }
+
+/* HEADER */
+header {
+  background: #2c3e50;
+  color: white;
+  padding: 14px 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+header h1 { font-size: 17px; font-weight: 600; }
+.header-right { display: flex; align-items: center; gap: 16px; font-size: 14px; opacity: .85; }
+.btn-logout {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.4);
+  color: white;
+  padding: 6px 14px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.btn-logout:hover { background: rgba(255,255,255,0.1); }
+.btn-carte {
+  background: #2980b9;
+  border: none;
+  color: white;
+  padding: 7px 16px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.btn-carte:hover { background: #2471a3; }
+
+/* CONTENU */
+.container { max-width: 1100px; margin: 28px auto; padding: 0 20px; }
+
+/* CARTES STATISTIQUES */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: white;
+  border-radius: 8px;
+  padding: 18px 20px;
+  border-left: 4px solid #ccc;
+}
+.stat-card.total   { border-left-color: #2980b9; }
+.stat-card.paye    { border-left-color: #27ae60; }
+.stat-card.nonpaye { border-left-color: #e74c3c; }
+.stat-card.activite{ border-left-color: #8e44ad; }
+
+.stat-label { font-size: 12px; color: #7f8c8d; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+.stat-value { font-size: 32px; font-weight: 700; color: #2c3e50; }
+.stat-sub   { font-size: 12px; color: #95a5a6; margin-top: 4px; }
+
+/* GRILLE 2 COLONNES */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+/* CARTE SECTION */
+.section-card {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+}
+.section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* BARRES ACTIVITES */
+.bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.bar-label { font-size: 13px; color: #555; width: 120px; text-align: right; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar-track { flex: 1; background: #f0f4f8; border-radius: 4px; height: 20px; overflow: hidden; }
+.bar-fill  { height: 100%; border-radius: 4px; transition: width .6s ease; }
+.bar-count { font-size: 12px; color: #888; width: 24px; text-align: right; }
+
+/* BARRE PAYE/NONPAYE */
+.paye-bar-wrapper { margin: 12px 0 6px; }
+.paye-bar-track {
+  height: 24px;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  background: #f0f4f8;
+}
+.paye-seg-paye   { background: #27ae60; transition: width .6s ease; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 600; }
+.paye-seg-non    { background: #e74c3c; transition: width .6s ease; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 600; }
+.paye-legende    { display: flex; gap: 20px; margin-top: 8px; font-size: 12px; color: #666; }
+.paye-dot        { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; }
+
+/* TABLEAU RECENTS */
+.recent-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.recent-table th { text-align: left; color: #7f8c8d; font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: .4px; padding: 0 0 10px; border-bottom: 1px solid #f0f0f0; }
+.recent-table td { padding: 9px 0; border-bottom: 1px solid #f8f8f8; color: #2c3e50; }
+.recent-table tr:last-child td { border-bottom: none; }
+.badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.badge-paye    { background: #d4edda; color: #155724; }
+.badge-nonpaye { background: #f8d7da; color: #721c24; }
+
+.btn-voir {
+  background: transparent;
+  border: 1px solid #ccc;
+  color: #2980b9;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.btn-voir:hover { background: #eaf4fb; }
+
+/* LOADING */
+#loading { text-align: center; padding: 60px; color: #888; font-size: 15px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Tableau de bord — GeoTCL</h1>
+  <div class="header-right">
+    <span id="user-label"></span>
+    <button class="btn-carte" onclick="window.location.href='map.html'">Carte</button>
+    <button class="btn-logout" onclick="logout()">Déconnexion</button>
+  </div>
+</header>
+
+<div class="container">
+  <div id="loading">Chargement des données...</div>
+  <div id="contenu" style="display:none;">
+
+    <!-- STATISTIQUES -->
+    <div class="stat-grid">
+      <div class="stat-card total">
+        <div class="stat-label">Total établissements</div>
+        <div class="stat-value" id="stat-total">—</div>
+        <div class="stat-sub">enregistrés</div>
+      </div>
+      <div class="stat-card paye">
+        <div class="stat-label">TCL payée</div>
+        <div class="stat-value" id="stat-paye">—</div>
+        <div class="stat-sub" id="stat-paye-pct">—</div>
+      </div>
+      <div class="stat-card nonpaye">
+        <div class="stat-label">TCL non payée</div>
+        <div class="stat-value" id="stat-nonpaye">—</div>
+        <div class="stat-sub" id="stat-nonpaye-pct">—</div>
+      </div>
+      <div class="stat-card activite">
+        <div class="stat-label">Activités distinctes</div>
+        <div class="stat-value" id="stat-activites">—</div>
+        <div class="stat-sub">types recensés</div>
+      </div>
+    </div>
+
+    <!-- ACTIVITES + PAIEMENT -->
+    <div class="two-col">
+      <div class="section-card">
+        <div class="section-title">Répartition par activité</div>
+        <div id="activites-bars"></div>
+      </div>
+      <div class="section-card">
+        <div class="section-title">Statut paiement TCL</div>
+        <div class="paye-bar-wrapper">
+          <div class="paye-bar-track">
+            <div class="paye-seg-paye" id="seg-paye"></div>
+            <div class="paye-seg-non"  id="seg-non"></div>
+          </div>
+        </div>
+        <div class="paye-legende">
+          <span><span class="paye-dot" style="background:#27ae60;"></span>Payé : <strong id="leg-paye">—</strong></span>
+          <span><span class="paye-dot" style="background:#e74c3c;"></span>Non payé : <strong id="leg-non">—</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECENTS -->
+    <div class="section-card">
+      <div class="section-title">Derniers établissements enregistrés</div>
+      <table class="recent-table">
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Activité</th>
+            <th>Adresse</th>
+            <th>Statut</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="recents-body"></tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://jcfpfsmiqcdeeabwtwrw.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpjZnBmc21pcWNkZWVhYnd0d3J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1OTQxMjksImV4cCI6MjA5MDE3MDEyOX0.QR3BQ3h7L93Kle_ziPOOHyVe2DF1nsu42xxvdf2n-tg";
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+var user = sessionStorage.getItem("tcl_user");
+if (!user) { window.location.href = "login.html"; }
+document.getElementById("user-label").textContent = user;
+
+function logout() {
+  sessionStorage.clear();
+  window.location.href = "login.html";
+}
+
+var COULEURS = ["#2980b9","#27ae60","#e67e22","#8e44ad","#16a085","#c0392b","#f39c12","#2c3e50","#7f8c8d"];
+
+async function charger() {
+  var { data, error } = await db.from("etablissements").select("*");
+
+  document.getElementById("loading").style.display = "none";
+
+  if (error || !data) {
+    document.getElementById("loading").style.display = "block";
+    document.getElementById("loading").textContent = "Erreur de chargement.";
+    return;
+  }
+
+  document.getElementById("contenu").style.display = "block";
+
+  var total   = data.length;
+  var paye    = data.filter(function(e){ return e.est_paye; }).length;
+  var nonpaye = total - paye;
+
+  document.getElementById("stat-total").textContent   = total;
+  document.getElementById("stat-paye").textContent    = paye;
+  document.getElementById("stat-nonpaye").textContent = nonpaye;
+
+  var pctPaye    = total > 0 ? Math.round(paye / total * 100) : 0;
+  var pctNonpaye = 100 - pctPaye;
+  document.getElementById("stat-paye-pct").textContent    = pctPaye + "% du total";
+  document.getElementById("stat-nonpaye-pct").textContent = pctNonpaye + "% du total";
+
+  var activitesCount = {};
+  data.forEach(function(e){
+    var act = (e.activite || "Non renseigné").trim();
+    activitesCount[act] = (activitesCount[act] || 0) + 1;
+  });
+  var activitesList = Object.entries(activitesCount).sort(function(a,b){ return b[1]-a[1]; });
+  document.getElementById("stat-activites").textContent = activitesList.length;
+
+  var maxVal = activitesList.length > 0 ? activitesList[0][1] : 1;
+  var barsHtml = "";
+  activitesList.forEach(function(item, i){
+    var pct = Math.round(item[1] / maxVal * 100);
+    barsHtml += '<div class="bar-row">' +
+      '<span class="bar-label" title="' + item[0] + '">' + item[0] + '</span>' +
+      '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%;background:' + COULEURS[i % COULEURS.length] + ';"></div></div>' +
+      '<span class="bar-count">' + item[1] + '</span>' +
+      '</div>';
+  });
+  document.getElementById("activites-bars").innerHTML = barsHtml || "<p style='color:#888;font-size:13px;'>Aucune donnée.</p>";
+
+  document.getElementById("seg-paye").style.width = pctPaye + "%";
+  document.getElementById("seg-non").style.width  = pctNonpaye + "%";
+  if (pctPaye > 15)    document.getElementById("seg-paye").textContent = pctPaye + "%";
+  if (pctNonpaye > 15) document.getElementById("seg-non").textContent  = pctNonpaye + "%";
+  document.getElementById("leg-paye").textContent = paye + " (" + pctPaye + "%)";
+  document.getElementById("leg-non").textContent  = nonpaye + " (" + pctNonpaye + "%)";
+
+  var recents = data.slice(-5).reverse();
+  var tbodyHtml = "";
+  recents.forEach(function(e){
+    var badge = e.est_paye
+      ? '<span class="badge badge-paye">Payé</span>'
+      : '<span class="badge badge-nonpaye">Non payé</span>';
+    tbodyHtml += '<tr>' +
+      '<td>' + (e.nom || "—") + '</td>' +
+      '<td>' + (e.activite || "—") + '</td>' +
+      '<td>' + (e.adresse || "—") + '</td>' +
+      '<td>' + badge + '</td>' +
+      '<td><button class="btn-voir" onclick="voirDetails(\'' + e.id + '\')">Voir</button></td>' +
+      '</tr>';
+  });
+  document.getElementById("recents-body").innerHTML = tbodyHtml || '<tr><td colspan="5" style="color:#888;padding:16px 0;">Aucun établissement.</td></tr>';
+}
+
+function voirDetails(id) {
+  sessionStorage.setItem("selected_id", id);
+  window.location.href = "details.html";
+}
+
+charger();
+</script>
+</body>
+</html>
