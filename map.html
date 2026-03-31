@@ -8,7 +8,6 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: Arial, sans-serif; display: flex; flex-direction: column; height: 100vh; }
 
-/* ── HEADER ── */
 header {
   background: #2c3e50;
   color: white;
@@ -86,7 +85,6 @@ header {
 .search-result-item:hover { background: #f0f4f8; }
 .search-result-item .item-nom      { font-weight: bold; }
 .search-result-item .item-activite { font-size: 12px; color: #7f8c8d; margin-top: 2px; }
-
 .no-result { padding: 12px 14px; font-size: 13px; color: #7f8c8d; text-align: center; }
 
 .header-right {
@@ -119,10 +117,8 @@ header {
 }
 .btn-logout:hover { background: #c0392b; }
 
-/* ── CARTE ── */
 #map { flex: 1; min-height: 0; }
 
-/* ── PANNEAU ── */
 #panel-wrapper {
   background: white;
   border-top: 3px solid #3498db;
@@ -190,7 +186,6 @@ header {
 }
 .btn-ajouter:hover { background: #219150; }
 
-/* popup */
 .popup-nom { font-weight: bold; font-size: 14px; margin-bottom: 8px; color: #2c3e50; }
 .btn-details {
   display: block;
@@ -212,20 +207,13 @@ header {
 
 <header>
   <div class="header-left">GeoTCL</div>
-
   <div class="header-center">
-    <input
-      type="text"
-      class="search-input"
-      id="searchInput"
+    <input type="text" class="search-input" id="searchInput"
       placeholder="Rechercher un etablissement..."
-      autocomplete="off"
-      oninput="rechercherEtablissement()"
-    />
+      autocomplete="off" oninput="rechercherEtablissement()" />
     <span class="search-icon">&#9906;</span>
     <div class="search-results" id="searchResults"></div>
   </div>
-
   <div class="header-right">
     <div class="user-info" id="welcome"></div>
     <button class="btn-logout" onclick="logout()">Deconnexion</button>
@@ -234,7 +222,6 @@ header {
 
 <div id="map"></div>
 
-<!-- PANNEAU AJOUT -->
 <div id="panel-wrapper">
   <div id="panel-title">Enregistrement d'un nouvel etablissement</div>
   <div id="panel">
@@ -243,7 +230,6 @@ header {
     <input id="proprietaire" placeholder="Nom du proprietaire" />
     <input id="activite"     placeholder="Activite" />
     <input id="adresse"      placeholder="Adresse" />
-    <input id="photo_url"    placeholder="Photo URL" />
     <select id="est_paye">
       <option value="non">Non paye</option>
       <option value="oui">Paye</option>
@@ -259,17 +245,14 @@ header {
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 
-// ── Session
 var user = sessionStorage.getItem("tcl_user");
 if (!user) window.location.href = "login.html";
 document.getElementById("welcome").innerText = user;
 
-// ── Supabase
 const SUPABASE_URL = "https://jcfpfsmiqcdeeabwtwrw.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpjZnBmc21pcWNkZWVhYnd0d3J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1OTQxMjksImV4cCI6MjA5MDE3MDEyOX0.QR3BQ3h7L93Kle_ziPOOHyVe2DF1nsu42xxvdf2n-tg";
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ── Carte
 var map = L.map('map').setView([36.8065, 10.1815], 13);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '© OpenStreetMap'
@@ -278,13 +261,11 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 var tousLesEtablissements = [];
 var tousLesMarqueurs = {};
 
-// ── Clic sur la carte
 map.on('click', function(e) {
   document.getElementById("lat").value = e.latlng.lat.toFixed(6);
   document.getElementById("lng").value = e.latlng.lng.toFixed(6);
 });
 
-// ── Charger depuis Supabase
 async function chargerDepuisDB() {
   const { data, error } = await db.from("etablissements").select("*");
   if (error) { console.error("Erreur chargement:", error.message); return; }
@@ -292,26 +273,18 @@ async function chargerDepuisDB() {
   data.forEach(function(e) { afficherMarker(e); });
 }
 
-// ── Ajouter
 async function ajouterMarqueur() {
-  var cin  = document.getElementById("cin").value.trim();
-  var nom  = document.getElementById("nom").value.trim();
-  var lat  = parseFloat(document.getElementById("lat").value);
-  var lng  = parseFloat(document.getElementById("lng").value);
+  var cin = document.getElementById("cin").value.trim();
+  var nom = document.getElementById("nom").value.trim();
+  var lat = parseFloat(document.getElementById("lat").value);
+  var lng = parseFloat(document.getElementById("lng").value);
 
-  // Validations
   if (cin && !/^\d{8}$/.test(cin)) {
     alert("Le CIN doit contenir exactement 8 chiffres.");
     return;
   }
-  if (!nom) {
-    alert("Veuillez entrer le nom de l'etablissement.");
-    return;
-  }
-  if (isNaN(lat) || isNaN(lng)) {
-    alert("Veuillez cliquer sur la carte pour choisir la position.");
-    return;
-  }
+  if (!nom) { alert("Veuillez entrer le nom de l'etablissement."); return; }
+  if (isNaN(lat) || isNaN(lng)) { alert("Veuillez cliquer sur la carte pour choisir la position."); return; }
 
   var nouvel = {
     cin:            cin || null,
@@ -319,7 +292,6 @@ async function ajouterMarqueur() {
     proprietaire:   document.getElementById("proprietaire").value.trim(),
     activite:       document.getElementById("activite").value.trim(),
     adresse:        document.getElementById("adresse").value.trim(),
-    photo_url:      document.getElementById("photo_url").value.trim(),
     est_paye:       document.getElementById("est_paye").value === "oui",
     date_ouverture: document.getElementById("date_ouverture").value || null,
     lat:            lat,
@@ -327,23 +299,18 @@ async function ajouterMarqueur() {
   };
 
   const { data, error } = await db.from("etablissements").insert([nouvel]).select();
-  if (error) {
-    alert("Erreur lors de l'ajout : " + error.message);
-    return;
-  }
+  if (error) { alert("Erreur lors de l'ajout : " + error.message); return; }
 
   tousLesEtablissements.push(data[0]);
   afficherMarker(data[0]);
 
-  // Vider les champs
-  ["cin","nom","proprietaire","activite","adresse","photo_url","lat","lng"].forEach(function(id) {
+  ["cin","nom","proprietaire","activite","adresse","lat","lng"].forEach(function(id) {
     document.getElementById(id).value = "";
   });
   document.getElementById("date_ouverture").value = "";
   document.getElementById("est_paye").value = "non";
 }
 
-// ── Afficher marqueur
 function afficherMarker(e) {
   var popup =
     '<div class="popup-nom">' + e.nom + '</div>' +
@@ -356,16 +323,11 @@ function afficherMarker(e) {
   tousLesMarqueurs[e.id] = marker;
 }
 
-// ── Recherche par nom
 function rechercherEtablissement() {
   var terme = document.getElementById("searchInput").value.trim().toLowerCase();
   var resultsDiv = document.getElementById("searchResults");
 
-  if (!terme) {
-    resultsDiv.classList.remove("open");
-    resultsDiv.innerHTML = "";
-    return;
-  }
+  if (!terme) { resultsDiv.classList.remove("open"); resultsDiv.innerHTML = ""; return; }
 
   var filtres = tousLesEtablissements.filter(function(e) {
     return e.nom.toLowerCase().indexOf(terme) !== -1;
@@ -390,39 +352,32 @@ function rechercherEtablissement() {
   resultsDiv.classList.add("open");
 }
 
-// ── Zoom sur établissement sélectionné
 function selectionnerEtablissement(id) {
   var etab = tousLesEtablissements.find(function(e) { return String(e.id) === String(id); });
   if (!etab) return;
-
   map.setView([etab.lat, etab.lng], 16);
   var marker = tousLesMarqueurs[etab.id];
   if (marker) marker.openPopup();
-
   document.getElementById("searchInput").value = etab.nom;
   document.getElementById("searchResults").classList.remove("open");
 }
 
-// Fermer résultats si clic ailleurs
 document.addEventListener("click", function(e) {
   if (!document.querySelector(".header-center").contains(e.target)) {
     document.getElementById("searchResults").classList.remove("open");
   }
 });
 
-// ── Détails
 function voirDetails(id) {
   sessionStorage.setItem("selected_id", id);
   window.location.href = "details.html";
 }
 
-// ── Déconnexion
 function logout() {
   sessionStorage.clear();
   window.location.href = "login.html";
 }
 
-// ── Recharge à chaque retour sur la page
 window.addEventListener("pageshow", function() {
   tousLesEtablissements = [];
   tousLesMarqueurs = {};
