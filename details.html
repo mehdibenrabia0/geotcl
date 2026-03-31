@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Détails — GeoTCL</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Arial, sans-serif; background: #f0f4f8; min-height: 100vh; display: flex; flex-direction: column; }
+
+/* HEADER */
+header {
+  background: #2c3e50;
+  color: white;
+  padding: 14px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 3px solid #3498db;
+}
+
+header h1 { font-size: 17px; font-weight: bold; letter-spacing: 0.03em; }
+
+.btn-retour {
+  background: transparent;
+  color: white;
+  border: 1px solid rgba(255,255,255,0.4);
+  padding: 7px 18px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+.btn-retour:hover { background: rgba(255,255,255,0.1); }
+
+/* CONTAINER */
+.container { max-width: 680px; margin: 40px auto; width: 90%; }
+
+/* CARD */
+.card {
+  background: white;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  overflow: hidden;
+}
+
+.card-header {
+  background: #2c3e50;
+  color: white;
+  padding: 18px 28px;
+}
+
+.card-header h2 { font-size: 20px; font-weight: bold; }
+.card-header p  { font-size: 12px; opacity: 0.6; margin-top: 4px; letter-spacing: 0.04em; text-transform: uppercase; }
+
+.card-body { padding: 28px; }
+
+/* DETAIL ROWS */
+.detail-section {
+  border: 1px solid #e0e6ed;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.detail-section-title {
+  background: #f7f9fb;
+  border-bottom: 1px solid #e0e6ed;
+  padding: 9px 16px;
+  font-size: 11px;
+  font-weight: bold;
+  color: #7f8c8d;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.detail-row {
+  display: flex;
+  border-bottom: 1px solid #f0f4f8;
+}
+.detail-row:last-child { border-bottom: none; }
+
+.detail-label {
+  width: 180px;
+  flex-shrink: 0;
+  padding: 12px 16px;
+  font-size: 13px;
+  color: #7f8c8d;
+  background: #fafbfc;
+  border-right: 1px solid #f0f4f8;
+}
+
+.detail-value {
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #2c3e50;
+  font-weight: 500;
+  flex: 1;
+}
+
+/* BADGES */
+.badge {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: bold;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.badge-paye    { background: #eafaf1; color: #1e8449; border: 1px solid #a9dfbf; }
+.badge-nonpaye { background: #fdf2f2; color: #c0392b; border: 1px solid #f5c6cb; }
+
+/* PHOTO */
+.photo-etab {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  display: block;
+  border-bottom: 1px solid #e0e6ed;
+}
+
+/* ACTIONS */
+.actions {
+  display: flex;
+  gap: 12px;
+  padding: 20px 28px;
+  background: #f7f9fb;
+  border-top: 1px solid #e0e6ed;
+}
+
+.btn-modifier {
+  padding: 10px 24px;
+  background: #2980b9;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  letter-spacing: 0.02em;
+}
+.btn-modifier:hover { background: #2471a3; }
+
+.btn-supprimer {
+  padding: 10px 24px;
+  background: white;
+  color: #c0392b;
+  border: 1px solid #c0392b;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  letter-spacing: 0.02em;
+}
+.btn-supprimer:hover { background: #fdf2f2; }
+
+/* MODAL */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+}
+.modal-overlay.active { display: flex; }
+
+.modal {
+  background: white;
+  border-radius: 4px;
+  width: 90%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+  background: #2c3e50;
+  color: white;
+  padding: 16px 24px;
+  font-size: 16px;
+  font-weight: bold;
+  border-bottom: 3px solid #3498db;
+}
+
+.modal-body { padding: 24px; }
+
+.form-group { margin-bottom: 16px; }
+
+.form-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: bold;
+  color: #7f8c8d;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #2c3e50;
+  font-family: Arial, sans-serif;
+}
+
+.form-group input:focus,
+.form-group select:focus { border-color: #3498db; outline: none; }
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  background: #f7f9fb;
+  border-top: 1px solid #e0e6ed;
+}
+
+.btn-annuler {
+  padding: 9px 22px;
+  background: white;
+  color: #555;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.btn-annuler:hover { background: #f0f4f8; }
+
+.btn-sauvegarder {
+  padding: 9px 22px;
+  background: #27ae60;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+}
+.btn-sauvegarder:hover { background: #219150; }
+
+.loading { text-align: center; color: #7f8c8d; padding: 60px 0; font-size: 15px; }
+.error   { text-align: center; color: #c0392b;  padding: 60px 0; font-size: 15px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Fiche Etablissement — GeoTCL</h1>
+  <button class="btn-retour" onclick="window.location.href='map.html'">Retour a la carte</button>
+</header>
+
+<div class="container">
+  <div class="card" id="card">
+    <div class="loading">Chargement en cours...</div>
+  </div>
+</div>
+
+<!-- MODAL MODIFICATION -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">Modifier l'etablissement</div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Nom</label>
+        <input type="text" id="edit-nom" />
+      </div>
+      <div class="form-group">
+        <label>Proprietaire</label>
+        <input type="text" id="edit-proprietaire" />
+      </div>
+      <div class="form-group">
+        <label>Activite</label>
+        <input type="text" id="edit-activite" />
+      </div>
+      <div class="form-group">
+        <label>Adresse</label>
+        <input type="text" id="edit-adresse" />
+      </div>
+      <div class="form-group">
+        <label>Photo URL</label>
+        <input type="text" id="edit-photo_url" />
+      </div>
+      <div class="form-group">
+        <label>Statut TCL</label>
+        <select id="edit-est_paye">
+          <option value="false">Non paye</option>
+          <option value="true">Paye</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Date d'ouverture</label>
+        <input type="date" id="edit-date_ouverture" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-annuler"     onclick="fermerModal()">Annuler</button>
+      <button class="btn-sauvegarder" onclick="sauvegarder()">Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+
+if (!sessionStorage.getItem("tcl_user")) {
+  window.location.href = "login.html";
+}
+
+const SUPABASE_URL = "https://jcfpfsmiqcdeeabwtwrw.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpjZnBmc21pcWNkZWVhYnd0d3J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1OTQxMjksImV4cCI6MjA5MDE3MDEyOX0.QR3BQ3h7L93Kle_ziPOOHyVe2DF1nsu42xxvdf2n-tg";
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+var currentData = null;
+
+async function load() {
+  var id = sessionStorage.getItem("selected_id");
+  if (!id) {
+    document.getElementById("card").innerHTML =
+      '<div class="error">Aucun etablissement selectionne.<br><br>' +
+      '<button class="btn-retour" onclick="window.location.href=\'map.html\'">Retour a la carte</button></div>';
+    return;
+  }
+
+  const { data, error } = await db
+    .from("etablissements")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error || !data) {
+    document.getElementById("card").innerHTML =
+      '<div class="error">Impossible de charger les donnees.<br><br>' +
+      '<button class="btn-retour" onclick="window.location.href=\'map.html\'">Retour a la carte</button></div>';
+    return;
+  }
+
+  currentData = data;
+  afficher(data);
+}
+
+function afficher(data) {
+  var html = "";
+
+  if (data.photo_url) {
+    html += '<img class="photo-etab" src="' + data.photo_url + '" alt="Photo" onerror="this.style.display=\'none\'">';
+  }
+
+  html +=
+    '<div class="card-header">' +
+      '<h2>' + data.nom + '</h2>' +
+      '<p>Fiche etablissement — Ref. #' + data.id + '</p>' +
+    '</div>' +
+    '<div class="card-body">';
+
+  // Section : Informations generales
+  html +=
+    '<div class="detail-section">' +
+      '<div class="detail-section-title">Informations generales</div>' +
+      row("Nom",          data.nom            || "—") +
+      row("Proprietaire", data.proprietaire   || "—") +
+      row("Activite",     data.activite       || "—") +
+      row("Adresse",      data.adresse        || "—") +
+    '</div>';
+
+  // Section : Situation fiscale
+  var badgeClass = data.est_paye ? "badge-paye"   : "badge-nonpaye";
+  var badgeText  = data.est_paye ? "Paye"         : "Non paye";
+  var dateAff    = data.date_ouverture
+    ? new Date(data.date_ouverture).toLocaleDateString("fr-FR")
+    : "—";
+
+  html +=
+    '<div class="detail-section">' +
+      '<div class="detail-section-title">Situation fiscale</div>' +
+      row("Statut TCL",      '<span class="badge ' + badgeClass + '">' + badgeText + '</span>') +
+      row("Date d\'ouverture", dateAff) +
+    '</div>';
+
+  // Section : Localisation
+  html +=
+    '<div class="detail-section">' +
+      '<div class="detail-section-title">Localisation</div>' +
+      row("Latitude",  data.lat) +
+      row("Longitude", data.lng) +
+    '</div>';
+
+  html += '</div>'; // fin card-body
+
+  // Boutons
+  html +=
+    '<div class="actions">' +
+      '<button class="btn-modifier"  onclick="ouvrirModal()">Modifier</button>' +
+      '<button class="btn-supprimer" onclick="supprimer()">Supprimer</button>' +
+    '</div>';
+
+  document.getElementById("card").innerHTML = html;
+}
+
+function row(label, value) {
+  return '<div class="detail-row">' +
+    '<div class="detail-label">' + label + '</div>' +
+    '<div class="detail-value">'  + value + '</div>' +
+  '</div>';
+}
+
+// MODAL
+function ouvrirModal() {
+  var d = currentData;
+  document.getElementById("edit-nom").value            = d.nom            || "";
+  document.getElementById("edit-proprietaire").value   = d.proprietaire   || "";
+  document.getElementById("edit-activite").value       = d.activite       || "";
+  document.getElementById("edit-adresse").value        = d.adresse        || "";
+  document.getElementById("edit-photo_url").value      = d.photo_url      || "";
+  document.getElementById("edit-est_paye").value       = d.est_paye ? "true" : "false";
+  document.getElementById("edit-date_ouverture").value = d.date_ouverture || "";
+  document.getElementById("modalOverlay").classList.add("active");
+}
+
+function fermerModal() {
+  document.getElementById("modalOverlay").classList.remove("active");
+}
+
+document.getElementById("modalOverlay").addEventListener("click", function(e) {
+  if (e.target === this) fermerModal();
+});
+
+async function sauvegarder() {
+  var updates = {
+    nom:            document.getElementById("edit-nom").value.trim(),
+    proprietaire:   document.getElementById("edit-proprietaire").value.trim(),
+    activite:       document.getElementById("edit-activite").value.trim(),
+    adresse:        document.getElementById("edit-adresse").value.trim(),
+    photo_url:      document.getElementById("edit-photo_url").value.trim(),
+    est_paye:       document.getElementById("edit-est_paye").value === "true",
+    date_ouverture: document.getElementById("edit-date_ouverture").value || null
+  };
+
+  if (!updates.nom) {
+    alert("Le nom est obligatoire.");
+    return;
+  }
+
+  const { error } = await db
+    .from("etablissements")
+    .update(updates)
+    .eq("id", currentData.id);
+
+  if (error) {
+    alert("Erreur lors de la modification : " + error.message);
+    return;
+  }
+
+  currentData = Object.assign(currentData, updates);
+  fermerModal();
+  afficher(currentData);
+}
+
+// SUPPRESSION
+async function supprimer() {
+  var ok = confirm(
+    "Confirmation de suppression\n\n" +
+    "Vous etes sur le point de supprimer l'etablissement :\n" +
+    "« " + currentData.nom + " »\n\n" +
+    "Cette action est irreversible. Confirmer ?"
+  );
+
+  if (!ok) return;
+
+  const { error } = await db
+    .from("etablissements")
+    .delete()
+    .eq("id", currentData.id);
+
+  if (error) {
+    alert("Erreur lors de la suppression : " + error.message);
+    return;
+  }
+
+  alert("L'etablissement a ete supprime avec succes.");
+  window.location.href = "map.html";
+}
+
+load();
+</script>
+
+</body>
+</html>

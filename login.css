@@ -1,0 +1,135 @@
+/* BODY */
+body {
+    font-family: Arial, sans-serif;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+/* CONTAINER */
+.login-container {
+    width: 90%;
+    max-width: 500px;
+    text-align: center;
+    box-sizing: border-box;
+    padding: 20px;
+}
+
+/* LOGO */
+.logo img {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    margin-bottom: 16px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* INPUTS */
+input[type="email"],
+input[type="password"],
+input[type="text"] {
+    width: 100%;
+    padding: 14px;
+    margin: 10px 0;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+input:focus {
+    border-color: #3498db;
+    outline: none;
+}
+
+/* WRAPPER MOT DE PASSE — corrige le bouton œil */
+.password-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.password-wrapper input {
+    width: 100%;
+    padding-right: 48px; /* espace pour le bouton œil */
+    box-sizing: border-box;
+    margin: 10px 0;
+}
+
+.toggle-pw {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 18px;
+    opacity: 0.5;
+    user-select: none;
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.toggle-pw:hover {
+    opacity: 1;
+}
+
+/* BUTTON */
+button[type="submit"] {
+    width: 100%;
+    padding: 14px;
+    background-color: #3498db;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.3s ease;
+    margin-top: 6px;
+}
+
+button[type="submit"]:hover {
+    background-color: #2980b9;
+}
+
+/* MESSAGE ERREUR */
+.error-msg {
+    background: #fdecea;
+    color: #c0392b;
+    border: 1px solid #f5c6cb;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+/* LINK */
+a {
+    display: block;
+    margin-top: 12px;
+    color: #3498db;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* FOOTER */
+footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+    color: #7f8c8d;
+    font-size: 14px;
+    padding: 12px 0;
+    background: #ffffff;
+}

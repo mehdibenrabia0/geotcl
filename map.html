@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Carte TCL — GeoTCL</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Arial, sans-serif; display: flex; flex-direction: column; height: 100vh; }
+
+/* ── HEADER ── */
+header {
+  background: #2c3e50;
+  color: white;
+  padding: 0 20px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  border-bottom: 3px solid #3498db;
+}
+
+.header-left {
+  font-size: 16px;
+  font-weight: bold;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+/* barre de recherche au centre */
+.header-center {
+  flex: 1;
+  max-width: 400px;
+  margin: 0 24px;
+  position: relative;
+}
+
+.search-input {
+  width: 100%;
+  padding: 7px 36px 7px 14px;
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 4px;
+  background: rgba(255,255,255,0.1);
+  color: white;
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.search-input::placeholder { color: rgba(255,255,255,0.5); }
+.search-input:focus {
+  border-color: #3498db;
+  background: rgba(255,255,255,0.15);
+}
+
+.search-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255,255,255,0.5);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+/* résultats de recherche */
+.search-results {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 9999;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.search-results.open { display: block; }
+
+.search-result-item {
+  padding: 10px 14px;
+  font-size: 14px;
+  color: #2c3e50;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f4f8;
+}
+.search-result-item:last-child { border-bottom: none; }
+.search-result-item:hover { background: #f0f4f8; }
+
+.search-result-item .item-nom      { font-weight: bold; }
+.search-result-item .item-activite { font-size: 12px; color: #7f8c8d; margin-top: 2px; }
+
+.no-result {
+  padding: 12px 14px;
+  font-size: 13px;
+  color: #7f8c8d;
+  text-align: center;
+}
+
+/* droite : compte + déconnexion */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.user-info {
+  font-size: 13px;
+  color: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 4px;
+  padding: 5px 12px;
+  letter-spacing: 0.02em;
+}
+
+.btn-logout {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 7px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: bold;
+}
+.btn-logout:hover { background: #c0392b; }
+
+/* ── CARTE ── */
+#map { flex: 1; min-height: 0; }
+
+/* ── PANNEAU ── */
+#panel {
+  padding: 10px 16px;
+  background: white;
+  border-top: 2px solid #3498db;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+#panel input,
+#panel select {
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  flex: 1;
+  min-width: 110px;
+  font-family: Arial, sans-serif;
+}
+#panel input:focus,
+#panel select:focus { border-color: #3498db; outline: none; }
+
+.btn-ajouter {
+  padding: 8px 20px;
+  background: #27ae60;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+.btn-ajouter:hover { background: #219150; }
+
+/* popup */
+.popup-nom { font-weight: bold; font-size: 14px; margin-bottom: 8px; color: #2c3e50; }
+.btn-details {
+  display: block;
+  width: 100%;
+  padding: 6px;
+  background: #2980b9;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  text-align: center;
+  font-family: Arial, sans-serif;
+}
+.btn-details:hover { background: #2471a3; }
+</style>
+</head>
+<body>
+
+<header>
+  <!-- Gauche : titre -->
+  <div class="header-left">GeoTCL</div>
+
+  <!-- Centre : barre de recherche -->
+  <div class="header-center">
+    <input
+      type="text"
+      class="search-input"
+      id="searchInput"
+      placeholder="Rechercher un etablissement..."
+      autocomplete="off"
+      oninput="rechercherEtablissement()"
+    />
+    <span class="search-icon">&#9906;</span>
+    <div class="search-results" id="searchResults"></div>
+  </div>
+
+  <!-- Droite : compte + déconnexion -->
+  <div class="header-right">
+    <div class="user-info" id="welcome"></div>
+    <button class="btn-logout" onclick="logout()">Deconnexion</button>
+  </div>
+</header>
+
+<div id="map"></div>
+
+<div id="panel">
+  <input id="nom"          placeholder="Nom *" />
+  <input id="proprietaire" placeholder="Proprietaire" />
+  <input id="activite"     placeholder="Activite" />
+  <input id="adresse"      placeholder="Adresse" />
+  <input id="photo_url"    placeholder="Photo URL" />
+  <select id="est_paye">
+    <option value="non">Non paye</option>
+    <option value="oui">Paye</option>
+  </select>
+  <input type="date" id="date_ouverture" />
+  <input id="lat" placeholder="Latitude"  readonly />
+  <input id="lng" placeholder="Longitude" readonly />
+  <button class="btn-ajouter" onclick="ajouterMarqueur()">Ajouter</button>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+
+// ── Session
+var user = sessionStorage.getItem("tcl_user");
+if (!user) window.location.href = "login.html";
+document.getElementById("welcome").innerText = user;
+
+// ── Supabase
+const SUPABASE_URL = "https://jcfpfsmiqcdeeabwtwrw.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpjZnBmc21pcWNkZWVhYnd0d3J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1OTQxMjksImV4cCI6MjA5MDE3MDEyOX0.QR3BQ3h7L93Kle_ziPOOHyVe2DF1nsu42xxvdf2n-tg";
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── Carte
+var map = L.map('map').setView([36.8065, 10.1815], 13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap'
+}).addTo(map);
+
+// ── Données en mémoire (pour la recherche)
+var tousLesEtablissements = [];
+var tousLesMarqueurs = {};
+
+// ── Clic sur la carte
+map.on('click', function(e) {
+  document.getElementById("lat").value = e.latlng.lat.toFixed(6);
+  document.getElementById("lng").value = e.latlng.lng.toFixed(6);
+});
+
+// ── Charger depuis Supabase
+async function chargerDepuisDB() {
+  const { data, error } = await db.from("etablissements").select("*");
+  if (error) { console.error("Erreur chargement:", error.message); return; }
+  tousLesEtablissements = data;
+  data.forEach(function(e) { afficherMarker(e); });
+}
+
+// ── Ajouter
+async function ajouterMarqueur() {
+  var nom = document.getElementById("nom").value.trim();
+  var lat = parseFloat(document.getElementById("lat").value);
+  var lng = parseFloat(document.getElementById("lng").value);
+
+  if (!nom)            { alert("Veuillez entrer le nom de l'etablissement."); return; }
+  if (isNaN(lat)||isNaN(lng)) { alert("Veuillez cliquer sur la carte pour choisir la position."); return; }
+
+  var nouvel = {
+    nom:            nom,
+    proprietaire:   document.getElementById("proprietaire").value,
+    activite:       document.getElementById("activite").value,
+    adresse:        document.getElementById("adresse").value,
+    photo_url:      document.getElementById("photo_url").value,
+    est_paye:       document.getElementById("est_paye").value === "oui",
+    date_ouverture: document.getElementById("date_ouverture").value || null,
+    lat: lat, lng: lng
+  };
+
+  const { data, error } = await db.from("etablissements").insert([nouvel]).select();
+  if (error) { alert("Erreur lors de l'ajout : " + error.message); return; }
+
+  tousLesEtablissements.push(data[0]);
+  afficherMarker(data[0]);
+
+  ["nom","proprietaire","activite","adresse","photo_url","lat","lng"].forEach(function(id) {
+    document.getElementById(id).value = "";
+  });
+  document.getElementById("date_ouverture").value = "";
+  document.getElementById("est_paye").value = "non";
+}
+
+// ── Afficher marqueur
+function afficherMarker(e) {
+  var popup =
+    '<div class="popup-nom">' + e.nom + '</div>' +
+    '<button class="btn-details" onclick="voirDetails(\'' + e.id + '\')">Voir la fiche</button>';
+
+  var marker = L.marker([e.lat, e.lng])
+    .addTo(map)
+    .bindPopup(popup, { maxWidth: 200 });
+
+  tousLesMarqueurs[e.id] = marker;
+}
+
+// ── RECHERCHE par nom
+function rechercherEtablissement() {
+  var terme = document.getElementById("searchInput").value.trim().toLowerCase();
+  var resultsDiv = document.getElementById("searchResults");
+
+  if (!terme) {
+    resultsDiv.classList.remove("open");
+    resultsDiv.innerHTML = "";
+    return;
+  }
+
+  var filtres = tousLesEtablissements.filter(function(e) {
+    return e.nom.toLowerCase().indexOf(terme) !== -1;
+  });
+
+  if (filtres.length === 0) {
+    resultsDiv.innerHTML = '<div class="no-result">Aucun etablissement trouve.</div>';
+    resultsDiv.classList.add("open");
+    return;
+  }
+
+  var html = "";
+  filtres.forEach(function(e) {
+    html +=
+      '<div class="search-result-item" onclick="selectionnerEtablissement(\'' + e.id + '\')">' +
+        '<div class="item-nom">' + e.nom + '</div>' +
+        '<div class="item-activite">' + (e.activite || "Activite non precisee") + '</div>' +
+      '</div>';
+  });
+
+  resultsDiv.innerHTML = html;
+  resultsDiv.classList.add("open");
+}
+
+// ── Clic sur un résultat → zoom + ouvre popup
+function selectionnerEtablissement(id) {
+  var etab = tousLesEtablissements.find(function(e) { return String(e.id) === String(id); });
+  if (!etab) return;
+
+  map.setView([etab.lat, etab.lng], 16);
+
+  var marker = tousLesMarqueurs[etab.id];
+  if (marker) marker.openPopup();
+
+  // Fermer les résultats
+  document.getElementById("searchInput").value = etab.nom;
+  document.getElementById("searchResults").classList.remove("open");
+}
+
+// Fermer résultats si clic ailleurs
+document.addEventListener("click", function(e) {
+  if (!document.querySelector(".header-center").contains(e.target)) {
+    document.getElementById("searchResults").classList.remove("open");
+  }
+});
+
+// ── Détails
+function voirDetails(id) {
+  sessionStorage.setItem("selected_id", id);
+  window.location.href = "details.html";
+}
+
+// ── Déconnexion
+function logout() {
+  sessionStorage.clear();
+  window.location.href = "login.html";
+}
+
+// Recharge à chaque fois qu'on revient sur la page (flèche navigateur)
+window.addEventListener("pageshow", function(e) {
+    tousLesEtablissements = [];
+    tousLesMarqueurs = {};
+    map.eachLayer(function(layer) {
+        if (layer instanceof L.Marker) {
+            map.removeLayer(layer);
+        }
+    });
+    chargerDepuisDB();
+});
+</script>
+
+</body>
+</html>
